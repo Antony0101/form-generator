@@ -15,12 +15,16 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  auth      Auth?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String                @id @default(cuid())
+  email             String                @unique
+  name              String?
+  auth              Auth?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  Question          AnswerTypeTemplates[]
+  Form              Form[]
+  QuestionTemplates QuestionTemplates[]
+  FormSubmission    FormSubmission[]
 }
 
 model Auth {
@@ -31,4 +35,56 @@ model Auth {
   tokenId   String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model QuestionTemplates {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  question  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AnswerTypeTemplates {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  name        String
+  validations String
+  type        String
+  options     String
+  formId      Int?
+  createdAt   DateTime @default(now())
+  updateAt    DateTime @updatedAt
+}
+
+model Form {
+  id             Int              @id @default(autoincrement())
+  user           User             @relation(fields: [userId], references: [id])
+  userId         String
+  version        Int              @default(1)
+  questions      String[]
+  types          String[]
+  validations    String[]
+  options        String[]
+  createdAt      DateTime         @default(now())
+  updateAt       DateTime         @updatedAt
+  FormSubmission FormSubmission[]
+}
+
+model FormSubmission {
+  id          Int      @id @default(autoincrement())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  form        Form     @relation(fields: [formId], references: [id])
+  formId      Int
+  version     Int
+  questions   String[]
+  types       String[]
+  validations String[]
+  options     String[]
+  answers     String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
