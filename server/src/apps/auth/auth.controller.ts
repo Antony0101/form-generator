@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword } from "../../utils/hash.utils.js";
 import { responseSuccess } from "../../utils/response.utils.js";
 import { generateJwt } from "../../utils/jwt.utils.js";
 import crypto from "crypto";
+import getAuthFromRequest from "../../utils/authHelper.utils.js";
 
 const SignUpController = async (req: Request, res: Response) => {
     const { email, password, name } = req.body;
@@ -83,9 +84,10 @@ const SignInController = async (req: Request, res: Response) => {
 };
 
 const CurrentUserController = async (req: Request, res: Response) => {
+    const { user } = getAuthFromRequest(req);
     return responseSuccess(res, {
         message: "Current user fetched successfuly",
-        data: null,
+        data: user,
     });
 };
 
