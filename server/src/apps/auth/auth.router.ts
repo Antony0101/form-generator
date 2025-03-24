@@ -9,7 +9,10 @@ import {
     signupBodyValidation,
     signinBodyValidation,
 } from "./auth.validation.js";
-import { expressWrapper } from "../../lib/wrappers/express.wrapper.js";
+import {
+    expressWrapper,
+    expressTWrapper,
+} from "../../lib/wrappers/express.wrapper.js";
 import { authMiddleware } from "../../lib/middlewares/auth.middleware.js";
 
 const authRouter = express.Router();
@@ -17,7 +20,7 @@ const authRouter = express.Router();
 authRouter.post(
     "/signup",
     joiBodyValidation(signupBodyValidation),
-    expressWrapper(SignUpController),
+    expressTWrapper(SignUpController),
 );
 
 authRouter.post(

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyJwt } from "../../utils/jwt.utils.js";
 import { generateApiError } from "../error/error.class.js";
-import prisma from "../../utils/prisma.utils.js";
+import UserModel from "../../models/user.model.js";
 
 function authMiddleware() {
     return async function (req: Request, res: Response, next: NextFunction) {
@@ -18,11 +18,7 @@ function authMiddleware() {
                 iat: number;
                 exp: number;
             };
-            const user = await prisma.user.findUnique({
-                where: {
-                    id: tokenDetails.userId,
-                },
-            });
+            const user = await UserModel.findOne({ _id: tokenDetails.userId });
             if (!user) {
                 throw generateApiError(401, "user not found");
             }

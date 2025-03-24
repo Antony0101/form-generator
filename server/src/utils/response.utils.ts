@@ -4,17 +4,19 @@ type Opt = {
     status?: number;
     message: string;
     data?: any;
-    page?: any;
-    limit?: any;
+    totalCount?: number;
+    page?: number;
+    limit?: number;
 };
 
 function responseSuccess(
     res: Response,
-    { status = 200, message = "Success", data = null, page, limit }: Opt,
+    { status = 200, data = null, totalCount, page, message, limit }: Opt,
 ) {
     res.status(status).json({
         success: true,
         message,
+        totalCount,
         page,
         limit,
         data,

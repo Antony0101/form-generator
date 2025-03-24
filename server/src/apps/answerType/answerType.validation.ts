@@ -9,5 +9,5 @@ export const createUpdateAnswerTypeSchema = Joi.object({
     name: Joi.string().required(),
     validations: Joi.string().required(),
     type: Joi.string().required(),
-    options: Joi.string().required(),
+    options: Joi.array().items(Joi.string().required()),
 });

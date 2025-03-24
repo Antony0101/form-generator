@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import prisma from "../../utils/prisma.utils.js";
 import { responseSuccess } from "../../utils/response.utils.js";
 import getAuthFromRequest from "../../utils/authHelper.utils.js";
 import { generateApiError } from "../../lib/error/error.class.js";
+import QuestionTemplateModel from "../../models/questionTemplate.model.js";
 
 const getQuestionsController = async (req: Request, res: Response) => {
     const { page, limit } = req.query as unknown as {
@@ -12,16 +12,16 @@ const getQuestionsController = async (req: Request, res: Response) => {
 
     const { user } = getAuthFromRequest(req);
 
-    const questions = await prisma.questionTemplates.findMany({
-        where: {
-            userId: user.id,
-        },
-        skip: (page - 1) * limit,
-        take: limit,
+    const totalCount = await QuestionTemplateModel.countDocuments({
+        userId: user._id,
     });
+    const questions = await QuestionTemplateModel.find({ userId: user._id })
+        .skip((page - 1) * limit)
+        .limit(limit);
     return responseSuccess(res, {
         data: questions,
         message: "fetched questions list successfuly",
+        totalCount,
         page,
         limit,
     });
@@ -30,15 +30,12 @@ const getQuestionsController = async (req: Request, res: Response) => {
 const createQuestionController = async (req: Request, res: Response) => {
     const { user } = getAuthFromRequest(req);
 
-    const { question } = req.body as {
-        question: string;
+    const { text } = req.body as {
+        text: string;
     };
-
-    const questionObject = await prisma.questionTemplates.create({
-        data: {
-            question,
-            userId: user.id,
-        },
+    const questionObject = await QuestionTemplateModel.create({
+        text,
+        userId: user._id,
     });
 
     return responseSuccess(res, {
@@ -51,29 +48,22 @@ const createQuestionController = async (req: Request, res: Response) => {
 const updateQuestionController = async (req: Request, res: Response) => {
     const { user } = getAuthFromRequest(req);
     const { questionId } = req.params;
-    const { question } = req.body as {
-        question: string;
+    const { text } = req.body as {
+        text: string;
     };
 
-    const questionObject = await prisma.questionTemplates.findUnique({
-        where: {
-            id: Number(questionId),
-            userId: user.id,
-        },
+    const questionObject = await QuestionTemplateModel.findOne({
+        _id: questionId,
+        userId: user._id,
     });
 
     if (!questionObject) {
         throw generateApiError(404, "invalid question id");
     }
 
-    await prisma.questionTemplates.update({
-        where: {
-            id: Number(questionId),
-        },
-        data: {
-            question,
-        },
-    });
+    questionObject.text = text;
+
+    await questionObject.save();
 
     return responseSuccess(res, {
         data: questionObject,
@@ -86,21 +76,18 @@ const deleteQuestionController = async (req: Request, res: Response) => {
 
     const { questionId } = req.params;
 
-    const questionObject = await prisma.questionTemplates.findUnique({
-        where: {
-            id: Number(questionId),
-            userId: user.id,
-        },
+    const questionObject = await QuestionTemplateModel.findOne({
+        _id: questionId,
+        userId: user._id,
     });
 
     if (!questionObject) {
         throw generateApiError(404, "invalid question id");
     }
 
-    await prisma.questionTemplates.delete({
-        where: {
-            id: Number(questionId),
-        },
+    await QuestionTemplateModel.deleteOne({
+        _id: questionId,
+        userId: user._id,
     });
 
     return responseSuccess(res, {

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import prisma from "../../utils/prisma.utils.js";
 import { responseSuccess } from "../../utils/response.utils.js";
 import getAuthFromRequest from "../../utils/authHelper.utils.js";
 import { generateApiError } from "../../lib/error/error.class.js";
+import AnswerTypeTemplatesModel from "../../models/answerTypeTemplates.model.js";
 
 const getAnswerTypeController = async (req: Request, res: Response) => {
     const { page, limit } = req.query as unknown as {
@@ -12,16 +12,17 @@ const getAnswerTypeController = async (req: Request, res: Response) => {
 
     const { user } = getAuthFromRequest(req);
 
-    const answersTypes = await prisma.answerTypeTemplates.findMany({
-        where: {
-            userId: user.id,
-        },
-        skip: (page - 1) * limit,
-        take: limit,
+    const totalCount = await AnswerTypeTemplatesModel.countDocuments({
+        userId: user._id,
     });
+    const answersTypes = await AnswerTypeTemplatesModel.find({
+        userId: user._id,
+    });
+
     return responseSuccess(res, {
         data: answersTypes,
         message: "fetched answersTypes list successfuly",
+        totalCount,
         page,
         limit,
     });
@@ -34,17 +35,15 @@ const createAnswerTypeController = async (req: Request, res: Response) => {
         name: string;
         validations: string;
         type: string;
-        options: string;
+        options: string[];
     };
 
-    const answerTypeObject = await prisma.answerTypeTemplates.create({
-        data: {
-            name,
-            validations,
-            type,
-            options,
-            userId: user.id,
-        },
+    const answerTypeObject = await AnswerTypeTemplatesModel.create({
+        name,
+        validations,
+        type,
+        options,
+        userId: user.id,
     });
 
     return responseSuccess(res, {
@@ -62,34 +61,26 @@ const updateAnswerTypeController = async (req: Request, res: Response) => {
         name: string;
         validations: string;
         type: string;
-        options: string;
+        options: string[];
     };
 
-    const answerType = await prisma.answerTypeTemplates.findUnique({
-        where: {
-            id: Number(answerTypeId),
-            userId: user.id,
-        },
+    const answerType = await AnswerTypeTemplatesModel.findOne({
+        _id: answerTypeId,
+        userId: user._id,
     });
 
     if (!answerType) {
-        throw generateApiError(404, "invalid question id");
+        throw generateApiError(404, "answerTypeTemplate not found");
     }
 
-    const answerTypeUpdate = await prisma.answerTypeTemplates.update({
-        where: {
-            id: Number(answerTypeId),
-        },
-        data: {
-            name,
-            validations,
-            type,
-            options,
-        },
-    });
+    answerType.name = name;
+    answerType.validations = validations;
+    answerType.type = type;
+    answerType.options = options;
+    await answerType.save();
 
     return responseSuccess(res, {
-        data: answerTypeUpdate,
+        data: answerType,
         message: "updated answerType successfuly",
     });
 };
@@ -99,21 +90,18 @@ const deleteAnswerTypeController = async (req: Request, res: Response) => {
 
     const { answerTypeId } = req.params;
 
-    const answersTypes = await prisma.answerTypeTemplates.findUnique({
-        where: {
-            id: Number(answerTypeId),
-            userId: user.id,
-        },
+    const answersTypes = await AnswerTypeTemplatesModel.findOne({
+        _id: answerTypeId,
+        userId: user._id,
     });
 
     if (!answersTypes) {
         throw generateApiError(404, "invalid answerType id");
     }
 
-    await prisma.answerTypeTemplates.delete({
-        where: {
-            id: Number(answerTypeId),
-        },
+    await AnswerTypeTemplatesModel.deleteOne({
+        _id: answerTypeId,
+        userId: user._id,
     });
 
     return responseSuccess(res, {

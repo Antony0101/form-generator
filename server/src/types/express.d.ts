@@ -1,16 +1,9 @@
 import { Prisma } from "@prisma/client";
+import { UserDocument } from "../models/user.model.ts";
 declare global {
     namespace Express {
         export interface Request {
-            user?: Prisma.UserGetPayload<{
-                select: {
-                    email: true;
-                    id: true;
-                    name: true;
-                    createdAt: true;
-                    updatedAt: true;
-                };
-            }>;
+            user?: UserDocument;
             token?: {
                 userId: string;
                 tokenId: string;
